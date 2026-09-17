@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Settings · Uburinzi Health{% endblock %}
+{% block heading %}Settings{% endblock %}
+{% block subheading %}Clinic profile, users, integrations and data control{% endblock %}
+
+{% block content %}
+<div class="grid two">
+  <div class="card">
+    <h2>Clinic profile</h2>
+    <p class="hint">Used inside patient SMS messages.</p>
+    <form method="post" action="/settings/clinic">
+      <div class="form-grid">
+        <div class="field"><label>Clinic name</label><input name="name" value="{{ clinic.name }}"></div>
+        <div class="field"><label>District</label><input name="district" value="{{ clinic.district }}"></div>
+        <div class="field"><label>Country</label><input name="country" value="{{ clinic.country }}"></div>
+        <div class="field"><label>Callback phone</label><input name="phone" value="{{ clinic.phone }}"></div>
+      </div>
+      <button class="btn primary" type="submit">Save</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Messaging configuration</h2>
+    <p class="hint">Driver, send window and unit cost come from <code>.env</code> (restart to apply).</p>
+    <div class="table-wrap"><table>
+      <tbody>
+        <tr><td>SMS driver</td><td><b>{{ driver.label }}</b></td></tr>
+        <tr><td>Sending window</td><td>{{ driver.window }} (clinic local time)</td></tr>
+        <tr><td>Daily cap</td><td>{{ driver.cap }} messages</td></tr>
+        <tr><td>Unit cost</td><td>{{ driver.cost }} RWF per segment</td></tr>
+        <tr><td>Timezone</td><td>{{ driver.timezone }}</td></tr>
+        <tr><td>Database</td><td>{{ driver.database }}</td></tr>
+      </tbody>
+    </table></div>
+    <div class="btn-row" style="margin-top:14px">
+      <a class="btn" href="/api/export/patients.csv">Export patients CSV</a>
+      <a class="btn" href="/api/export/messages.csv">Export messages CSV</a>
+      <a class="btn" href="/api/impact-report" target="_blank">Impact report (JSON)</a>
+    </div>
+  </div>
+</div>
+
+<div class="grid two" style="margin-top:16px">
+  <div class="card">
+    <h2>Users</h2>
+    <p class="hint">Clinic staff who can access this workspace.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr><td><b>{{ u.name }}</b></td><td>{{ u.email }}</td><td><span class="pill {{ 'teal' if u.role == 'admin' else 'grey' }}">{{ u.role }}</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+    <form method="post" action="/settings/users" style="margin-top:14px">
+      <div class="form-grid">
+        <div class="field"><label>Name</label><input name="name" required placeholder="Dr. Jean"></div>
+        <div class="field"><label>Email</label><input name="email" type="email" required placeholder="doctor@clinic.rw"></div>
+        <div class="field"><label>Password</label><input name="password" type="password" required placeholder="min. 8 characters"></div>
+        <div class="field">
+          <label>Role</label>
+          <select name="role"><option value="clinician">Clinician</option><option value="admin">Admin</option><option value="frontdesk">Front desk</option></select>
+        </div>
+      </div>
+      <button class="btn primary" type="submit">Add user</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Integrations &amp; webhooks</h2>
+    <p class="hint">Plug Uburinzi into any clinic system.</p>
+    <div class="table-wrap"><table>
+      <tbody>
+        <tr><td>Inbound SMS</td><td><code>POST /api/webhooks/sms/inbound</code></td></tr>
+        <tr><td>Delivery report</td><td><code>POST /api/webhooks/sms/delivery</code></td></tr>
+        <tr><td>Patient upsert (EMR adapter)</td><td><code>POST /api/integrations/patients</code></td></tr>
+        <tr><td>Lab result trigger</td><td><code>POST /api/integrations/lab-results</code></td></tr>
+        <tr><td>Impact report</td><td><code>GET /api/impact-report</code></td></tr>
+      </tbody>
+    </table></div>
+    <div class="banner info" style="margin-top:14px;margin-bottom:0">
+      Adapters are data-only: a CSV export from ClinicPlus, OpenMRS or DHIS2 is enough to go live. A middleware
+      adapter for live APIs is a ~2-day build per system.
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Danger zone</h2>
+  <p class="hint">Demo data only — this wipes every patient, message and alert in the database.</p>
+  <div class="btn-row">
+    <form method="post" action="/settings/reset" onsubmit="return confirm('Delete all data and reseed with demo patients?')">
+      <button class="btn danger" type="submit">Reset &amp; reseed demo data</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

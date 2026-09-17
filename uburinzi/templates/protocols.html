@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Protocols · Uburinzi Health{% endblock %}
+{% block heading %}Clinical protocols &amp; message library{% endblock %}
+{% block subheading %}Condition-specific cadences, editable copy in every language{% endblock %}
+
+{% block content %}
+<div class="grid kpis">
+  {% for key, spec in programs.items() %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="pill" style="background:{{ spec.color }}1a;color:{{ spec.color }}">{{ spec.short }}</span>
+      <span style="font-size:12px;color:var(--muted)">{{ spec.checkins_per_week }} check-in(s)/week</span>
+    </div>
+    <h3 style="margin-top:10px">{{ spec.label }}</h3>
+    <div class="stat-row" style="gap:14px">
+      <div>Every <b>{{ spec.cadence_days }}d</b><span>check-in</span></div>
+      <div>Every <b>{{ spec.education_every_days }}d</b><span>education</span></div>
+      <div><b>{{ spec.missed_dose_amber }}/{{ spec.missed_dose_red }}</b><span>amber/red threshold</span></div>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:8px">Default medication: {{ spec.default_medication }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Message library</h2>
+  <p class="hint">
+    Edit copy without touching code. Placeholders: <code>{first_name}</code> <code>{clinic}</code>
+    <code>{condition}</code> <code>{medication}</code> <code>{date}</code> <code>{time}</code> <code>{phone}</code>.
+  </p>
+
+  <form class="search-row" method="get" action="/protocols">
+    <select name="program">
+      <option value="common" {{ 'selected' if selected.program == 'common' }}>Common (welcome, reminders, replies)</option>
+      {% for key, spec in programs.items() %}
+        <option value="{{ key }}" {{ 'selected' if selected.program == key }}>{{ spec.label }}</option>
+      {% endfor %}
+    </select>
+    <select name="language">
+      {% for code, name in languages.items() %}
+        <option value="{{ code }}" {{ 'selected' if selected.language == code }}>{{ name }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn" type="submit">Load</button>
+  </form>
+
+  {% for group in grouped.values() %}
+    <h3 style="margin-top:18px;text-transform:capitalize">{{ group.kind.replace('_', ' ') }}</h3>
+    {% for t in group.templates %}
+    <form method="post" action="/protocols/templates/{{ t.id }}" style="border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fcfdfd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap">
+        <code style="font-size:12px">{{ t.program }} / {{ t.kind }} / {{ t.language }} / {{ t.variant }}</code>
+        <span style="font-size:12px;color:var(--muted)">{{ t.body|length }} chars · {{ t.body|length // 160 + 1 }} SMS</span>
+      </div>
+      <textarea name="body" rows="2" style="width:100%">{{ t.body }}</textarea>
+      <div class="btn-row" style="margin-top:8px;justify-content:flex-end">
+        <button class="btn small primary" type="submit">Save</button>
+      </div>
+    </form>
+    {% endfor %}
+  {% else %}
+    <div class="empty">No templates for this selection.</div>
+  {% endfor %}
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h3>Clinical governance</h3>
+  <p class="hint">Before enrolling real patients, these cadences and all Kinyarwanda copy must be reviewed and signed off by the clinic's clinical advisor. Log the review in the audit trail.</p>
+  <div class="banner warn" style="margin:0">
+    This MVP ships with sensible defaults modelled on Rwanda's NCD and HIV/TB guidelines. They are a starting point for clinical review, not a substitute for it.
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}Channels · Uburinzi Health{% endblock %}
+{% block heading %}Channels &amp; escalation{% endblock %}
+{% block subheading %}SMS · WhatsApp · Voice — one patient loop, three ways to reach it{% endblock %}
+
+{% block actions %}
+  <a class="btn" href="/api/channels/balance" target="_blank">Check balance ↗</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="grid kpis">
+  {% for channel, info in drivers.items() %}
+  <div class="card kpi">
+    <div class="label">{{ channel | upper }}</div>
+    <div class="value" style="font-size:19px">{{ info.label }}</div>
+    <div class="delta">
+      <span class="pill {{ 'green' if info.live else 'grey' }}">{{ 'LIVE' if info.live else 'SIMULATED' }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not drivers.sms.live and not drivers.whatsapp.live and not drivers.voice.live %}
+<div class="banner warn">
+  <b>Nothing is live yet.</b> Paste your Africa's Talking credentials below, then flip each channel from
+  Simulator to the live driver. Until then every message stays on this machine and costs nothing.
+</div>
+{% endif %}
+
+<div class="grid two" style="margin-top:16px">
+  <div class="card">
+    <h2>Africa's Talking credentials</h2>
+    <p class="hint">
+      Stored encrypted (AES-free keystream tied to your secret key). For production prefer the
+      <code>.env</code> variables — then nothing is written to the database at all.
+    </p>
+    <form method="post" action="/channels/credentials">
+      <div class="form-grid">
+        <div class="field">
+          <label>Username</label>
+          <input name="at_username" value="{{ store.at_username }}" placeholder="my-app-username">
+        </div>
+        <div class="field">
+          <label>API key</label>
+          <input name="at_api_key" type="password" placeholder="{{ api_key_masked or 'atsk_...' }}" autocomplete="new-password">
+          <div style="font-size:11.5px;color:var(--muted);margin-top:4px">
+            {% if api_key_masked %}Saved: {{ api_key_masked }} — leave blank to keep it{% else %}Not set{% endif %}
+          </div>
+        </div>
+        <div class="field">
+          <label>SMS sender ID / short code</label>
+          <input name="at_sender_id" value="{{ store.at_sender_id }}" placeholder="Uburinzi">
+        </div>
+        <div class="field">
+          <label>Voice number (from AT dashboard)</label>
+          <input name="at_voice_number" value="{{ store.at_voice_number }}" placeholder="+250...">
+        </div>
+        <div class="field">
+          <label>WhatsApp sender number</label>
+          <input name="at_whatsapp_number" value="{{ store.at_whatsapp_number }}" placeholder="+250...">
+        </div>
+        <div class="field">
+          <label>WhatsApp template name</label>
+          <input name="whatsapp_template" value="{{ store.whatsapp_template }}" placeholder="uburinzi_checkin">
+        </div>
+        <div class="field">
+          <label>Voice TTS language</label>
+          <select name="voice_language">
+            {% for code, name in [('en-US','English (US)'), ('sw-KE','Swahili (Kenya)'), ('fr-FR','French')] %}
+            <option value="{{ code }}" {{ 'selected' if store.voice_language == code }}>{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Recorded prompt URL (Kinyarwanda)</label>
+          <input name="voice_prompt_url" value="{{ store.voice_prompt_url }}" placeholder="https://…/kinyarwanda.mp3">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Public base URL (used to build webhook URLs)</label>
+        <input name="public_base_url" value="{{ store.public_base_url }}" placeholder="https://uburinzi.example.com">
+      </div>
+
+      <label style="display:flex;gap:8px;align-items:center;font-weight:400;color:var(--ink);font-size:13.5px;margin-bottom:14px">
+        <input type="checkbox" name="at_sandbox" value="1" {{ 'checked' if store.at_sandbox in ['true','1'] }} style="width:auto">
+        Sandbox mode (Africa's Talking test environment)
+      </label>
+
+      <div class="btn-row" style="margin-top:4px">
+        <button class="btn primary" type="submit">Save credentials</button>
+        <form method="post" action="/channels/sandbox?enable=true" style="display:inline">
+          <button class="btn" type="submit">Use AT sandbox (free testing)</button>
+        </form>
+        <form method="post" action="/channels/sandbox?enable=false" style="display:inline">
+          <button class="btn" type="submit">Back to simulator</button>
+        </form>
+      </div>
+    </form>
+
+    <div class="banner info" style="margin-top:16px;margin-bottom:0">
+      Don't have an account yet?
+      <a href="https://account.africastalking.com/auth/register" target="_blank">Create one</a> →
+      Dashboard → <b>Settings → API Key</b> to generate the key, then buy a
+      <b>Sender ID</b> (SMS), a <b>Voice number</b> and enable <b>WhatsApp</b>.
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Channel routing</h2>
+      <p class="hint">Each channel has its own driver, so you can go live on SMS while WhatsApp stays simulated.</p>
+      <form method="post" action="/channels/drivers">
+        {% for channel, info in drivers.items() %}
+        <div style="margin-bottom:12px">
+          <label style="text-transform:uppercase">{{ channel }}</label>
+          <select name="{{ channel }}_driver">
+            {% for value, label in info.options %}
+            <option value="{{ value }}" {{ 'selected' if info.name == value }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endfor %}
+        <button class="btn primary" type="submit">Save routing</button>
+      </form>
+
+      <h3 style="margin-top:20px">Send a test</h3>
+      <p class="hint">A real message or call — the fastest way to prove the wiring.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input id="test-phone" placeholder="+2507…" style="max-width:200px">
+        <button class="btn" type="button" onclick="testChannel('sms')">Test SMS</button>
+        <button class="btn" type="button" onclick="testChannel('whatsapp')">Test WhatsApp</button>
+        <button class="btn" type="button" onclick="testChannel('voice')">Test call</button>
+      </div>
+      <div id="test-result" style="font-size:12.5px;margin-top:10px;color:var(--muted)"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Escalation policy</h2>
+      <p class="hint">
+        When a flagged patient stops answering SMS, Uburinzi retries on WhatsApp, then calls them.
+        Only amber/red patients are escalated, never more than the caps below.
+      </p>
+      <form method="post" action="/channels/policy">
+        <label style="display:flex;gap:8px;align-items:center;font-weight:400;color:var(--ink);font-size:13.5px;margin-bottom:12px">
+          <input type="checkbox" name="escalation_enabled" value="1" {{ 'checked' if store.escalation_enabled in ['true','1'] }} style="width:auto">
+          Enable SMS → WhatsApp → voice escalation
+        </label>
+        <div class="form-grid">
+          <div class="field"><label>WhatsApp retry after (hours)</label>
+            <input name="escalate_whatsapp_after_hours" value="{{ store.escalate_whatsapp_after_hours }}" type="number" min="1"></div>
+          <div class="field"><label>Voice call after (hours)</label>
+            <input name="escalate_voice_after_hours" value="{{ store.escalate_voice_after_hours }}" type="number" min="1"></div>
+          <div class="field"><label>Max calls per patient / week</label>
+            <input name="voice_max_per_week" value="{{ store.voice_max_per_week }}" type="number" min="1"></div>
+          <div class="field"><label>Max calls per scheduler run</label>
+            <input name="voice_max_calls_per_run" value="{{ store.voice_max_calls_per_run }}" type="number" min="1"></div>
+          <div class="field">
+            <label>Escalate from</label>
+            <select name="escalate_min_status">
+              <option value="amber" {{ 'selected' if store.escalate_min_status == 'amber' }}>Amber and red</option>
+              <option value="red" {{ 'selected' if store.escalate_min_status == 'red' }}>Red only</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn primary" type="submit">Save policy</button>
+      </form>
+      <form method="post" action="/api/escalations/run" style="margin-top:10px">
+        <button class="btn" type="submit">Run escalation now</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="grid two" style="margin-top:16px">
+  <div class="card">
+    <h2>Webhook URLs</h2>
+    <p class="hint">Paste these into the Africa's Talking dashboard (and Meta, if you use it directly).</p>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Inbound SMS</td><td><code>{{ webhooks.sms_inbound }}</code></td></tr>
+          <tr><td>SMS delivery report</td><td><code>{{ webhooks.sms_delivery }}</code></td></tr>
+          <tr><td>WhatsApp inbound</td><td><code>{{ webhooks.whatsapp }}</code></td></tr>
+          <tr><td>Voice answer (IVR)</td><td><code>{{ webhooks.voice_answer }}</code></td></tr>
+          <tr><td>Voice keypress (DTMF)</td><td><code>{{ webhooks.voice_dtmf }}</code></td></tr>
+          <tr><td>Voice events</td><td><code>{{ webhooks.voice_event }}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="banner info" style="margin-top:14px;margin-bottom:0">
+      The voice answer URL must be <b>publicly reachable</b> — Africa's Talking fetches the IVR script
+      the moment the patient picks up. Use ngrok for local testing:
+      <code>ngrok http 8000</code>, then set the public base URL above to the https URL it prints.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recent calls</h2>
+    <p class="hint">Every call attempt, with the key the patient pressed.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>When</th><th>Patient</th><th>Purpose</th><th>Status</th><th>Key</th><th class="num">Secs</th></tr></thead>
+        <tbody>
+          {% for c in calls %}
+          <tr>
+            <td style="white-space:nowrap">{{ human(c.created_at) }}</td>
+            <td>{% if c.patient %}<a href="/patients/{{ c.patient.id }}">{{ c.patient.full_name }}</a>{% else %}<span style="color:var(--muted)">{{ c.phone }}</span>{% endif %}</td>
+            <td>{{ c.purpose }}</td>
+            <td><span class="pill {{ 'green' if c.status == 'completed' else ('amber' if c.status in ['ringing','answered'] else 'red') }}">{{ c.status }}</span></td>
+            <td>{{ c.dtmf_digits or '—' }}</td>
+            <td class="num">{{ c.duration_seconds }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6"><div class="empty">No calls yet. Run an escalation or press “Test call”.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+async function testChannel(channel) {
+  const phone = document.getElementById("test-phone").value.trim();
+  const out = document.getElementById("test-result");
+  if (!phone) { out.textContent = "Enter a phone number first (e.g. +250788123456)."; return; }
+  out.textContent = "Sending…";
+  try {
+    const res = await fetch("/api/channels/test", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({channel, phone})
+    });
+    const data = await res.json();
+    out.innerHTML = data.ok
+      ? `✅ ${channel} sent — status <b>${data.status}</b>${data.error ? " · " + data.error : ""}`
+      : `❌ ${channel} failed: ${data.error || "unknown error"}`;
+  } catch (err) {
+    out.textContent = "Request failed: " + err;
+  }
+}
+</script>
+{% endblock %}

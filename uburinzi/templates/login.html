@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Uburinzi Health</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="login-wrap">
+  <div class="login-card">
+    <div class="brand" style="color:var(--teal-dark);margin-bottom:14px">
+      <div class="brand-mark" style="background:var(--teal);color:#fff">U</div>
+      <div>
+        <div class="brand-name" style="color:var(--ink);font-size:17px">Uburinzi Health</div>
+        <div class="brand-sub" style="color:var(--muted)">Chronic patient monitoring · Kigali</div>
+      </div>
+    </div>
+
+    <h1>Sign in</h1>
+    <p class="sub">Clinic staff workspace for between-visit patient monitoring.</p>
+
+    {% if error %}<div class="banner error">{{ error }}</div>{% endif %}
+
+    <form method="post" action="/login">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" value="{{ email or 'founder@uburinzi.rw' }}" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" value="uburinzi2026" required>
+      </div>
+      <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" type="submit">Sign in</button>
+    </form>
+
+    <div class="banner info" style="margin-top:18px;font-size:12.5px">
+      Demo accounts (password <b>uburinzi2026</b>):<br>
+      • founder@uburinzi.rw — admin<br>
+      • nurse@uburinzi.rw — clinician
+    </div>
+    <div class="footer-note">Uburinzi Health MVP · built for the timbuktoo HealthTech LaunchPad application.</div>
+  </div>
+</body>
+</html>

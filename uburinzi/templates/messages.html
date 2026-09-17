@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Messages · Uburinzi Health{% endblock %}
+{% block heading %}Message log{% endblock %}
+{% block subheading %}{{ total }} messages · {{ '{:,.0f}'.format(spend) }} RWF of airtime this month{% endblock %}
+
+{% block content %}
+<form class="search-row" method="get" action="/messages">
+  <select name="kind">
+    <option value="">All types</option>
+    <option value="checkin" {{ 'selected' if filters.kind == 'checkin' }}>Medication check-in</option>
+    <option value="education" {{ 'selected' if filters.kind == 'education' }}>Education tip</option>
+    <option value="appointment" {{ 'selected' if filters.kind == 'appointment' }}>Appointment reminder</option>
+    <option value="welcome" {{ 'selected' if filters.kind == 'welcome' }}>Welcome</option>
+    <option value="manual" {{ 'selected' if filters.kind == 'manual' }}>Manual / reply</option>
+  </select>
+  <select name="status">
+    <option value="">Any status</option>
+    <option value="sent" {{ 'selected' if filters.status == 'sent' }}>Sent</option>
+    <option value="delivered" {{ 'selected' if filters.status == 'delivered' }}>Delivered</option>
+    <option value="queued" {{ 'selected' if filters.status == 'queued' }}>Queued</option>
+    <option value="failed" {{ 'selected' if filters.status == 'failed' }}>Failed</option>
+  </select>
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Search message text or phone">
+  <button class="btn" type="submit">Filter</button>
+  <a class="btn" href="/messages">Reset</a>
+  <a class="btn" href="/api/export/messages.csv">Export CSV</a>
+</form>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Sent</th><th>Patient</th><th>Type</th><th>Message</th><th>Status</th><th>Reply</th><th class="num">Cost</th></tr>
+      </thead>
+      <tbody>
+        {% for m in messages %}
+        <tr>
+          <td style="white-space:nowrap">{{ human(m.sent_at or m.created_at) }}</td>
+          <td style="white-space:nowrap">
+            {% if m.patient %}<a href="/patients/{{ m.patient.id }}">{{ m.patient.full_name }}</a>{% else %}<span style="color:var(--muted)">unknown</span>{% endif %}
+          </td>
+          <td><span class="pill {{ 'teal' if m.kind == 'checkin' else 'grey' }}">{{ m.kind }}</span></td>
+          <td style="max-width:420px">
+            <div style="font-size:13.5px">{{ m.body }}</div>
+            <div style="font-size:11.5px;color:var(--muted)">to {{ m.phone }} · {{ m.language }} · {{ m.provider }} · {{ m.segments }} segment(s)</div>
+            {% if m.error %}<div style="font-size:11.5px;color:var(--red)">{{ m.error }}</div>{% endif %}
+          </td>
+          <td><span class="pill {{ 'green' if m.status == 'delivered' else ('blue' if m.status == 'sent' else ('red' if m.status == 'failed' else 'grey')) }}">{{ m.status }}</span></td>
+          <td>
+            {% if replies.get(m.id) %}
+              <span class="pill {{ 'green' if replies[m.id].choice == 'yes' else ('red' if replies[m.id].choice == 'unwell' else 'amber') }}">{{ replies[m.id].choice }}</span>
+              <div style="font-size:11.5px;color:var(--muted)">{{ ago(replies[m.id].received_at) }}</div>
+            {% else %}<span style="color:var(--muted)">—</span>{% endif %}
+          </td>
+          <td class="num">{{ '{:,.1f}'.format(m.cost_rwf) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty">No messages match these filters.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
