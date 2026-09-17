@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Install · Uburinzi Health{% endblock %}
+{% block heading %}Install Uburinzi on a phone{% endblock %}
+{% block subheading %}The clinic workspace as a home-screen app — no app store, no APK{% endblock %}
+
+{% block content %}
+
+<div class="banner info">
+  <b>For patients, nothing to install.</b> They receive ordinary SMS (and WhatsApp or a voice call if they go
+  quiet) on the phone they already own. This page is about putting the <b>clinic dashboard</b> on your own
+  phone or the nurse's phone.
+</div>
+
+<div class="grid two">
+  <div class="card">
+    <h2>Android (Chrome, Edge, Samsung Internet)</h2>
+    <ol style="font-size:14px;line-height:1.7;padding-left:20px;margin:0">
+      <li>Open this site in Chrome.</li>
+      <li>Tap the <b>⋮ menu</b> (top right).</li>
+      <li>Tap <b>“Install app”</b> or <b>“Add to Home screen”</b>.</li>
+      <li>Confirm — the Uburinzi icon appears on your home screen and opens full-screen.</li>
+    </ol>
+    <p class="hint" style="margin-top:12px">
+      On most phones a button labelled <b>“⬇ Install on this phone”</b> appears by itself in the left-hand
+      menu — tap it and you're done.
+    </p>
+    <div class="banner ok" style="margin:14px 0 0">
+      It also works offline: pages you have already opened (patient list, alert queue) still load with no data,
+      and anything you do is queued until the connection returns.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>iPhone / iPad (Safari)</h2>
+    <ol style="font-size:14px;line-height:1.7;padding-left:20px;margin:0">
+      <li>Open this site in <b>Safari</b> (not Chrome — iOS only allows Safari to install).</li>
+      <li>Tap the <b>Share</b> button (box with an up arrow).</li>
+      <li>Scroll down and tap <b>“Add to Home Screen”</b>.</li>
+      <li>Tap <b>Add</b> — the icon appears with the other apps.</li>
+    </ol>
+    <p class="hint" style="margin-top:12px">
+      iOS refreshes the icon badge for open alerts each time you open the app.
+    </p>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Run it on your own computer or server</h2>
+  <p class="hint">Everything you need is one download away — no cloud account required.</p>
+  <div class="code"># 1. download and unzip
+# 2. in the folder:
+python3 -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python -m app.cli reset                               # creates the DB + demo cohort
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# then open http://localhost:8000  → founder@uburinzi.rw / uburinzi2026</div>
+  <div class="btn-row" style="margin-top:14px">
+    <a class="btn primary" href="/download">⬇ Download the source (zip)</a>
+    <a class="btn" href="/static/manifest.webmanifest" target="_blank">App manifest ↗</a>
+  </div>
+</div>
+
+<div class="grid two" style="margin-top:16px">
+  <div class="card">
+    <h2>What works once installed</h2>
+    <table>
+      <tbody>
+        <tr><td>Alert queue</td><td>✅ full, offline-capable</td></tr>
+        <tr><td>Patient list &amp; threads</td><td>✅ full, offline-capable</td></tr>
+        <tr><td>Acknowledge / resolve alerts</td><td>✅ queued until back online</td></tr>
+        <tr><td>Sending SMS / calls</td><td>⚠️ needs a connection (server-side)</td></tr>
+        <tr><td>Dashboard charts</td><td>✅ last cached view</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Before you put real patients on it</h2>
+    <ul style="font-size:14px;line-height:1.7;padding-left:20px;margin:0">
+      <li>Deploy it somewhere with <b>HTTPS</b> (see the deployment guide).</li>
+      <li>Add your Africa's Talking credentials on <b>Channels</b>.</li>
+      <li>Paste the six webhook URLs into the AT dashboard.</li>
+      <li>Get the protocols and Kinyarwanda copy signed off by your clinical advisor.</li>
+      <li>Capture <b>consent</b> per patient before the first message goes out.</li>
+    </ul>
+    <div style="margin-top:12px"><a class="btn small" href="/channels">Go to Channels →</a></div>
+  </div>
+</div>
+
+{% endblock %}

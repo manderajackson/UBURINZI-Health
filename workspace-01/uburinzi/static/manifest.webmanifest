@@ -1,0 +1,26 @@
+{
+  "name": "Uburinzi Health",
+  "short_name": "Uburinzi",
+  "description": "Chronic patient monitoring between clinic visits — SMS, WhatsApp and voice for African clinics.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0b4f4a",
+  "theme_color": "#0f766e",
+  "categories": ["health", "productivity", "medical"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/static/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Alert queue", "short_name": "Alerts", "url": "/alerts", "description": "Patients who need a call today"},
+    {"name": "Patients", "short_name": "Patients", "url": "/patients", "description": "Traffic-light patient list"},
+    {"name": "Simulator", "short_name": "Simulator", "url": "/simulator", "description": "Run the SMS loop without airtime"},
+    {"name": "Channels", "short_name": "Channels", "url": "/channels", "description": "SMS, WhatsApp and voice settings"}
+  ]
+}

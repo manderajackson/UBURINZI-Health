@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Patients · Uburinzi Health{% endblock %}
+{% block heading %}Patients{% endblock %}
+{% block subheading %}{{ patients|length }} shown · {{ nav.total_patients }} enrolled in this clinic{% endblock %}
+
+{% block content %}
+<form class="search-row" method="get" action="/patients">
+  <input type="search" name="q" value="{{ filters.q }}" placeholder="Search name, phone or file number">
+  <select name="program">
+    <option value="">All programmes</option>
+    {% for key, spec in programs.items() %}
+      <option value="{{ key }}" {{ 'selected' if filters.program == key }}>{{ spec.label }}</option>
+    {% endfor %}
+  </select>
+  <select name="status">
+    <option value="">Any status</option>
+    <option value="red" {{ 'selected' if filters.status == 'red' }}>Urgent (red)</option>
+    <option value="amber" {{ 'selected' if filters.status == 'amber' }}>At risk (amber)</option>
+    <option value="green" {{ 'selected' if filters.status == 'green' }}>Stable (green)</option>
+  </select>
+  <select name="language">
+    <option value="">Any language</option>
+    {% for code, name in languages.items() %}
+      <option value="{{ code }}" {{ 'selected' if filters.language == code }}>{{ name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn" type="submit">Filter</button>
+  <a class="btn" href="/patients">Reset</a>
+</form>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th><th>Patient</th><th>File no.</th><th>Phone</th><th>Programmes</th>
+          <th>Lang</th><th class="num">Missed streak</th><th>Last contact</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in patients %}
+        <tr>
+          <td><span class="pill {{ p.status }}"><span class="dot {{ p.status }}"></span>{{ p.status }}</span></td>
+          <td><a href="/patients/{{ p.id }}"><b>{{ p.full_name }}</b></a>
+            <div style="font-size:12px;color:var(--muted)">{{ p.age or '—' }} yrs · {{ p.village }}</div></td>
+          <td>{{ p.mrn }}</td>
+          <td style="white-space:nowrap">{{ p.phone }}</td>
+          <td>
+            {% for e in p.enrollments %}
+              {% if e.active %}
+              <span class="pill" style="background:{{ programs[e.program].color }}1a;color:{{ programs[e.program].color }}">{{ programs[e.program].short }}</span>
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>{{ languages.get(p.language, p.language) }}</td>
+          <td class="num">{{ p.missed_streak }}</td>
+          <td style="white-space:nowrap">{{ ago(p.last_contact_at) }}</td>
+          <td><a class="btn small" href="/patients/{{ p.id }}">Open</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty">No patients match these filters.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

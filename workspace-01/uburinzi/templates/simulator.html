@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}SMS Simulator · Uburinzi Health{% endblock %}
+{% block heading %}SMS simulator{% endblock %}
+{% block subheading %}Prove the whole loop before spending one franc of airtime{% endblock %}
+
+{% block actions %}
+  <form method="post" action="/api/scheduler/run" style="display:inline">
+    <button class="btn primary" type="submit">Run scheduler now</button>
+  </form>
+{% endblock %}
+
+{% block content %}
+
+<div class="banner info">
+  <b>What this is.</b> The simulator is a stand-in handset. It receives every SMS the platform sends, and replies
+  with 1 / 2 / 3 based on each patient's modelled adherence. The dashboard, alerts and impact report update live —
+  exactly as they will when you plug in Africa's Talking.
+</div>
+
+<div class="grid two">
+  <div class="card">
+    <h2>Send a reply as a patient</h2>
+    <p class="hint">This hits the same inbound webhook Africa's Talking will call in production.</p>
+    <form method="post" action="/api/simulator/reply">
+      <div class="field">
+        <label>Patient</label>
+        <select name="patient_id" required>
+          {% for p in patients %}
+          <option value="{{ p.id }}" {{ 'selected' if selected_id == p.id }}>
+            {{ p.full_name }} · {{ p.phone }} · {{ (p.sim_adherence*100)|round(0) }}% adherence persona
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Channel</label>
+          <select name="channel">
+            <option value="sms">SMS</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="voice">Voice (keypress)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Message body / key pressed</label>
+          <input name="text" id="sim-text" value="1" placeholder="1, 2, 3 or free text">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn" onclick="document.getElementById('sim-text').value='1'">1 = took medication</button>
+        <button type="button" class="btn" onclick="document.getElementById('sim-text').value='2'">2 = missed dose</button>
+        <button type="button" class="btn" onclick="document.getElementById('sim-text').value='3'">3 = not feeling well</button>
+        <button type="button" class="btn" onclick="document.getElementById('sim-text').value='STOP'">STOP</button>
+        <button type="button" class="btn" onclick="document.getElementById('sim-text').value='murakoze'">Free text</button>
+      </div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn primary" type="submit">Send reply to platform</button>
+      </div>
+    </form>
+
+    <div class="btn-row" style="margin-top:16px">
+      <form method="post" action="/api/simulator/auto"><button class="btn" type="submit">Generate {{ auto_count }} realistic replies</button></form>
+      <form method="post" action="/api/escalations/run"><button class="btn" type="submit">Run SMS → WhatsApp → voice escalation</button></form>
+      <form method="post" action="/api/alerts/sweep"><button class="btn" type="submit">Re-run alert engine</button></form>
+      <form method="post" action="/api/jobs/daily"><button class="btn" type="submit">Run daily sweep</button></form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Live activity</h2>
+    <p class="hint">Last {{ recent|length }} inbound replies received by the platform.</p>
+    <ul class="timeline">
+      {% for m in recent %}
+      <li>
+        <div class="when">{{ human(m.received_at) }}</div>
+        <div class="what">
+          <div>
+            {% if m.patient %}<a href="/patients/{{ m.patient.id }}"><b>{{ m.patient.full_name }}</b></a>{% else %}<b>{{ m.phone }}</b>{% endif %}
+            <span class="pill {{ 'green' if m.choice == 'yes' else ('red' if m.choice == 'unwell' else ('amber' if m.choice == 'no' else 'grey')) }}">{{ m.choice or 'unrecognised' }}</span>
+            {% if m.simulated %}<span class="pill grey">simulated</span>{% endif %}
+            <span class="pill {{ 'teal' if m.channel == 'sms' else ('blue' if m.channel == 'whatsapp' else 'amber') }}">{{ m.channel }}</span>
+          </div>
+          <div class="bubble in" style="margin-top:4px">{{ m.body }}</div>
+        </div>
+      </li>
+      {% else %}
+      <li><div class="empty">No replies yet — generate some on the left.</div></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2>Go live: point Africa's Talking at this server</h2>
+  <p class="hint">Set these in <code>.env</code>, then switch the driver. No code changes required.</p>
+  <div class="code">UBURINZI_SMS_DRIVER=africastalking
+AFRICASTALKING_USERNAME=your-username
+AFRICASTALKING_API_KEY=your-api-key
+UBURINZI_SMS_SENDER_ID=Uburinzi
+
+# Inbound SMS callback (Africa's Talking → your server)
+https://YOUR-DOMAIN/api/webhooks/sms/inbound
+
+# Delivery reports
+https://YOUR-DOMAIN/api/webhooks/sms/delivery</div>
+  <p class="hint" style="margin-top:12px">
+    Current driver: <b>{{ driver.label }}</b>. Sending window {{ driver.window }} · daily cap {{ driver.cap }} SMS ·
+    unit cost {{ driver.cost }} RWF.
+  </p>
+</div>
+
+{% endblock %}

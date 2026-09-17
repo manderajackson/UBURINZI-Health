@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Import / Export · Uburinzi Health{% endblock %}
+{% block heading %}Import &amp; export{% endblock %}
+{% block subheading %}Move a cohort in from ClinicPlus, OpenMRS, Bahmni or DHIS2{% endblock %}
+
+{% block content %}
+<div class="grid two">
+  <div class="card">
+    <h2>Import patients from CSV</h2>
+    <p class="hint">Imported patients are created with SMS consent switched off — turn it on per patient after you capture consent.</p>
+    <form method="post" action="/import" enctype="multipart/form-data">
+      <div class="field">
+        <label>CSV file</label>
+        <input type="file" name="file" accept=".csv" required>
+      </div>
+      <button class="btn primary" type="submit">Import</button>
+    </form>
+
+    <h3 style="margin-top:22px">Required columns</h3>
+    <div class="code">mrn,first_name,last_name,phone,language,sex,birth_year,village,program,medication
+UB-2026-0101,Marie,Uwimana,+250788123456,rw,female,1980,Gatenga,diabetes,Metformin 500mg</div>
+    <ul style="font-size:13px;color:var(--muted);margin-top:10px">
+      <li><b>program</b> must be one of: {{ programs.keys() | join(', ') }}</li>
+      <li><b>language</b>: {{ languages.keys() | join(', ') }}</li>
+      <li>Phone numbers without a country code are assumed to be Rwandan (+250)</li>
+      <li>Rows with a phone number that already exists are skipped</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Export</h2>
+    <p class="hint">Everything in the pilot, in plain CSV.</p>
+    <div class="btn-row">
+      <a class="btn" href="/api/export/patients.csv">Patients CSV</a>
+      <a class="btn" href="/api/export/messages.csv">Message log CSV</a>
+      <a class="btn" href="/api/export/alerts.csv">Alert log CSV</a>
+      <a class="btn" href="/api/impact-report">Impact report (JSON)</a>
+    </div>
+
+    <h3 style="margin-top:22px">Sample file</h3>
+    <p class="hint">Download a ClinicPlus-shaped export generated from your current cohort, then re-import it to test the round trip.</p>
+    <a class="btn" href="/api/export/sample-import.csv">Download sample_clinicplus_export.csv</a>
+
+    <h3 style="margin-top:22px">Live EMR adapter</h3>
+    <p class="hint">
+      For a live integration, POST patients straight into the API instead of uploading a file:
+    </p>
+    <div class="code">curl -X POST https://YOUR-DOMAIN/api/integrations/patients \
+  -H "X-API-Key: $UBURINZI_API_KEY" -H "Content-Type: application/json" \
+  -d '{"mrn":"UB-1","first_name":"Marie","last_name":"Uwimana",
+       "phone":"+250788123456","program":"diabetes","language":"rw"}'</div>
+  </div>
+</div>
+{% endblock %}

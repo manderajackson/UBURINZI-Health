@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}Uburinzi Health{% endblock %}</title>
+<meta name="description" content="Chronic patient monitoring between clinic visits — SMS, WhatsApp and voice for African clinics.">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Uburinzi">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="icon" href="/static/icons/favicon-32.png" sizes="32x32">
+<link rel="icon" href="/static/icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">U</div>
+      <div>
+        <div class="brand-name">Uburinzi Health</div>
+        <div class="brand-sub">Chronic care between visits</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="/" class="{{ 'active' if active == 'dashboard' }}">Dashboard</a>
+      <a href="/patients" class="{{ 'active' if active == 'patients' }}">Patients</a>
+      <a href="/alerts" class="{{ 'active' if active == 'alerts' }}">
+        Alerts
+        {% if nav.alerts_open %}<span class="badge">{{ nav.alerts_open }}</span>{% endif %}
+      </a>
+      <a href="/messages" class="{{ 'active' if active == 'messages' }}">Messages</a>
+      <a href="/protocols" class="{{ 'active' if active == 'protocols' }}">Protocols</a>
+      <a href="/simulator" class="{{ 'active' if active == 'simulator' }}">Simulator</a>
+      <a href="/channels" class="{{ 'active' if active == 'channels' }}">Channels</a>
+      <a href="/import" class="{{ 'active' if active == 'import' }}">Import / Export</a>
+      <a href="/settings" class="{{ 'active' if active == 'settings' }}">Settings</a>
+      <a href="/api/docs" target="_blank">API docs ↗</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div style="font-weight:600;color:#fff">{{ current_user.name }}</div>
+      <div>{{ current_user.email }}</div>
+      <div style="margin-top:6px">{{ clinic.name }} · {{ clinic.district }}</div>
+      <div style="margin-top:8px">
+        <span class="pill {{ 'grey' if driver.mode == 'simulator' else 'teal' }}" style="background:rgba(255,255,255,.16);color:#fff">
+          {{ driver.label }}
+        </span>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:12px">
+        <a href="/install" style="color:rgba(255,255,255,.75)">Install app</a>
+        <a href="/logout" style="color:rgba(255,255,255,.75)">Log out</a>
+      </div>
+      <button id="install-btn" class="btn small" style="display:none;margin-top:8px;background:#fff;color:#0b4f4a;border:none">
+        ⬇ Install on this phone
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>{% block heading %}{% endblock %}</h1>
+        <div class="sub">{% block subheading %}{{ clinic.name }} · {{ nav.now }}{% endblock %}</div>
+      </div>
+      <div class="topbar-right">
+        {% block actions %}{% endblock %}
+        <a class="btn primary" href="/patients/new">+ Add patient</a>
+      </div>
+    </header>
+
+    <div class="content">
+      {% if request.query_params.get('msg') %}
+        <div class="banner {{ request.query_params.get('cat', 'ok') }}">{{ request.query_params.get('msg') }}</div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/sw.js").catch(function (e) {
+        console.log("SW registration skipped:", e.message);
+      });
+    });
+  }
+  // Surface the install prompt (Android Chrome) so staff can add it to the home screen.
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById("install-btn");
+    if (btn) {
+      btn.style.display = "inline-flex";
+      btn.addEventListener("click", async function () {
+        btn.style.display = "none";
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      });
+    }
+  });
+</script>
+</body>
+</html>
