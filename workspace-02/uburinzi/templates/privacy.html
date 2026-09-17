@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Privacy policy — Uburinzi Health{% endblock %}
+{% block content %}
+<div class="card" style="max-width:820px;margin:0 auto">
+  <h1 style="font-size:22px;margin-bottom:4px">Uburinzi Health — privacy policy</h1>
+  <p class="hint">Last updated {{ today }}. This is the policy linked from our Google Play listing.</p>
+
+  <h2 style="font-size:16px;margin-top:20px">What Uburinzi Health is</h2>
+  <p class="hint">
+    Uburinzi Health is a clinical follow-up tool used by clinics. It sends short messages (SMS,
+    WhatsApp or a voice call) to patients with long-term conditions — diabetes, hypertension, HIV,
+    TB, asthma, epilepsy, heart failure and antenatal care — between their clinic visits, and
+    records their answers so nurses can act early. It is used by clinic staff, not by the public.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">What we collect</h2>
+  <ul class="hint" style="line-height:1.7">
+    <li><strong>Patient</strong> name, phone number, medical record number, year of birth, sex,
+      village, preferred language, condition and medication.</li>
+    <li><strong>Health responses</strong> the patient sends back (for example "1 = I took my
+      medication"), plus appointment attendance.</li>
+    <li><strong>Message logs</strong> — what was sent, when, whether it was delivered, and its cost.</li>
+    <li><strong>Staff accounts</strong> — name, work email and a hashed password, plus an audit trail
+      of who acknowledged or resolved each alert.</li>
+  </ul>
+
+  <h2 style="font-size:16px;margin-top:20px">Why we use it</h2>
+  <p class="hint">
+    Solely to remind patients about medication and appointments, to detect when someone is
+    struggling, and to alert their clinic. We do not use patient data for advertising, and we never
+    sell it. Messages are clinical, never promotional.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">Consent</h2>
+  <p class="hint">
+    A patient is only messaged after their clinic has recorded that the patient agreed. Patients can
+    withdraw at any time by replying <strong>STOP</strong> (or by asking the clinic), and a nurse can
+    switch messaging off for a patient immediately in the app. Opt-out requests are honoured within
+    24 hours, and every consent decision is stored with a timestamp.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">Who can see it</h2>
+  <p class="hint">
+    Clinic staff who are logged in, and the technical team that keeps the service running. Messages
+    travel over encrypted connections; provider credentials (SMS, WhatsApp, voice) are stored
+    encrypted; passwords are hashed. We keep data only as long as the clinic needs it for care and
+    audit, then delete it on request.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">Children</h2>
+  <p class="hint">
+    The service follows the clinic's own patients. Where a patient is a child, the clinic obtains
+    consent from a parent or guardian, as it does for any other care.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">Your rights</h2>
+  <p class="hint">
+    Patients can ask their clinic to see what is stored about them, correct it, or have it deleted.
+    Under Rwanda's law on the protection of personal data, these requests are handled by the clinic
+    that holds the record.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">The app on your phone</h2>
+  <p class="hint">
+    The Uburinzi app is the clinic's dashboard, packaged from our website so it can be installed
+    like any other Android app. It requests no camera, microphone, location or contacts — it does not
+    need them, and patients receive ordinary SMS, so they never have to install anything at all.
+  </p>
+
+  <h2 style="font-size:16px;margin-top:20px">Contact</h2>
+  <p class="hint">
+    Questions, corrections or deletion requests: ask your clinic, or email
+    <strong>{{ contact_email }}</strong>.
+  </p>
+
+  <p class="hint" style="margin-top:24px;padding-top:14px;border-top:1px solid var(--line)">
+    Uburinzi Health · chronic patient monitoring between clinic visits, for clinics anywhere.
+  </p>
+</div>
+{% endblock %}

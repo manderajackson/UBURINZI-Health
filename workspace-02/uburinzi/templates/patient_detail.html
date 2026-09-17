@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.full_name }} · Uburinzi Health{% endblock %}
+{% block heading %}{{ patient.full_name }} <span class="pill {{ patient.status }}" style="vertical-align:middle;margin-left:6px">{{ patient.status }}</span>{% endblock %}
+{% block subheading %}{{ patient.mrn }} · {{ patient.phone }} · {{ languages.get(patient.language, patient.language) }} · enrolled {{ human(patient.enrolled_at, False) }}{% endblock %}
+
+{% block actions %}
+  <a class="btn" href="/simulator?patient_id={{ patient.id }}">Simulate reply</a>
+  <form method="post" action="/patients/{{ patient.id }}/call" style="display:inline">
+    <button class="btn primary" type="submit" data-confirm="Place an automated check-in call to {{ patient.phone }}?">📞 Call patient</button>
+  </form>
+{% endblock %}
+
+{% block content %}
+
+<div class="grid kpis" style="margin-bottom:16px">
+  <div class="card kpi"><div class="label">Adherence 30d</div><div class="value">{{ (stats.adherence*100)|round(0) }}%</div><div class="delta">{{ stats.yes }} yes / {{ stats.no }} no / {{ stats.unwell }} unwell</div></div>
+  <div class="card kpi"><div class="label">Missed-dose streak</div><div class="value">{{ patient.missed_streak }}</div><div class="delta">consecutive “no” replies</div></div>
+  <div class="card kpi"><div class="label">Unanswered check-ins</div><div class="value">{{ patient.no_reply_streak }}</div><div class="delta">silence detection</div></div>
+  <div class="card kpi"><div class="label">Last contact</div><div class="value" style="font-size:19px">{{ ago(patient.last_contact_at) }}</div><div class="delta">{{ human(patient.last_contact_at) }}</div></div>
+</div>
+
+<div class="grid two">
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2>Conversation</h2>
+        <p class="hint">Every SMS exchanged with this patient.</p>
+      </div>
+      <form method="post" action="/patients/{{ patient.id }}/send" style="display:flex;gap:8px;min-width:280px;flex:1">
+        <input name="body" placeholder="Type a message to {{ patient.first_name }}…" required>
+        <button class="btn primary" type="submit">Send</button>
+      </form>
+    </div>
+
+    <ul class="timeline" style="margin-top:10px">
+      {% for item in timeline %}
+      <li>
+        <div class="when">{{ human(item.at) }}</div>
+        <div class="what">
+          {% if item.direction == 'out' %}
+            <span class="pill grey" style="margin-bottom:4px">{{ item.kind }}</span>
+            <span class="pill {{ 'teal' if item.channel == 'sms' else ('blue' if item.channel == 'whatsapp' else 'amber') }}" style="margin-bottom:4px">{{ item.channel }}</span>
+            <div class="bubble out">{{ item.body }}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:3px">
+              {{ item.status }} · {{ '{:,.1f}'.format(item.cost_rwf) }} RWF{% if item.simulated %} · simulated{% endif %}
+            </div>
+          {% else %}
+            <span class="pill {{ 'green' if item.choice == 'yes' else ('red' if item.choice == 'unwell' else ('amber' if item.choice == 'no' else 'grey')) }}" style="margin-bottom:4px">
+              {{ item.choice or 'unrecognised' }}
+            </span>
+            <div class="bubble in">{{ item.body }}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:3px">reply{% if item.simulated %} · simulated{% endif %}</div>
+          {% endif %}
+        </div>
+      </li>
+      {% else %}
+      <li><div class="what empty">No messages yet.</div></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Programmes</h2>
+      <p class="hint">Monitoring cadence per condition.</p>
+      {% for e in patient.enrollments %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;gap:10px">
+          <div>
+            <span class="pill" style="background:{{ programs[e.program].color }}1a;color:{{ programs[e.program].color }}">{{ programs[e.program].short }}</span>
+            <b>{{ programs[e.program].label }}</b>
+            <div style="font-size:12.5px;color:var(--muted)">{{ e.medication }} · check-in every {{ programs[e.program].cadence_days }} days</div>
+          </div>
+          <div style="text-align:right;font-size:12px;color:var(--muted);white-space:nowrap">
+            {{ 'active' if e.active else 'closed' }}<br>since {{ human(e.started_at, False) }}
+          </div>
+        </div>
+      {% else %}
+        <div class="empty">Not enrolled in any programme.</div>
+      {% endfor %}
+
+      <form method="post" action="/patients/{{ patient.id }}/enroll" style="display:flex;gap:8px;margin-top:14px">
+        <select name="program">
+          {% for key, spec in programs.items() %}<option value="{{ key }}">{{ spec.short }} — {{ spec.label }}</option>{% endfor %}
+        </select>
+        <button class="btn" type="submit">Enrol</button>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Open alerts</h2>
+      <p class="hint">Raised automatically by the rule engine.</p>
+      {% for a in open_alerts %}
+        <div style="padding:9px 0;border-bottom:1px solid #f1f5f9">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <b style="font-size:13.5px"><span class="dot {{ a.severity }}"></span> {{ a.rule.replace(':', ' · ').replace('_',' ') }}</b>
+            <span style="font-size:12px;color:var(--muted)">{{ ago(a.created_at) }}</span>
+          </div>
+          <div style="font-size:13px;color:var(--muted)">{{ a.message }}</div>
+          <form method="post" action="/alerts/{{ a.id }}/resolve" style="margin-top:6px">
+            <button class="btn small" type="submit">Mark resolved</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="empty">No open alerts. ✅</div>
+      {% endfor %}
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Appointments</h2>
+      <p class="hint">Reminders go out automatically 3 days before each visit.</p>
+      {% for a in appointments %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;gap:8px">
+          <div>
+            <b style="font-size:13.5px">{{ human(a.due_at) }}</b>
+            <div style="font-size:12.5px;color:var(--muted)">{{ a.reason }}</div>
+          </div>
+          <span class="pill {{ 'green' if a.status == 'completed' else ('red' if a.status == 'missed' else 'blue') }}">{{ a.status }}</span>
+        </div>
+      {% else %}
+        <div class="empty">No appointments recorded.</div>
+      {% endfor %}
+      <form method="post" action="/patients/{{ patient.id }}/appointment" style="display:flex;gap:8px;margin-top:12px">
+        <input type="date" name="due_date" required>
+        <input name="reason" placeholder="Reason">
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Record &amp; consent</h2>
+      <p class="hint">Consent is required before any SMS is sent.</p>
+      <form method="post" action="/patients/{{ patient.id }}/consent">
+        <label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-weight:400;font-size:13.5px">
+          <input type="checkbox" name="consent_sms" value="1" {{ 'checked' if patient.consent_sms }} style="width:auto"> Consented to SMS reminders
+        </label>
+        <label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-weight:400;font-size:13.5px;margin-top:6px">
+          <input type="checkbox" name="active" value="1" {{ 'checked' if patient.active }} style="width:auto"> Active in the monitoring cohort
+        </label>
+        <button class="btn primary small" style="margin-top:10px" type="submit">Save</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

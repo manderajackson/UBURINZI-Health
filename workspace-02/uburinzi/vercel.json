@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python@4.3.0",
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "routes": [{ "src": "/(.*)", "dest": "/api/index.py" }],
+  "crons": [
+    { "path": "/api/cron/scheduler?daily=1", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/scheduler", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/scheduler", "schedule": "0 13 * * *" },
+    { "path": "/api/cron/scheduler", "schedule": "0 16 * * *" }
+  ],
+  "env": {
+    "UBURINZI_SCHEDULER": "false"
+  }
+}

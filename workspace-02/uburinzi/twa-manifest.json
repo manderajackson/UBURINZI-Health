@@ -1,0 +1,59 @@
+{
+  "packageId": "rw.uburinzi.health",
+  "hostName": "uburinzi.vercel.app",
+  "name": "Uburinzi Health",
+  "launcherName": "Uburinzi",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "0f766e",
+  "themeColorDark": "0b4f4a",
+  "navigationColor": "0f766e",
+  "navigationColorDark": "0b4f4a",
+  "navigationDividerColor": "000000",
+  "navigationDividerColorDark": "000000",
+  "backgroundColor": "0b4f4a",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://uburinzi.vercel.app/static/icons/icon-512.png",
+  "maskableIconUrl": "https://uburinzi.vercel.app/static/icons/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Alert queue",
+      "short_name": "Alerts",
+      "url": "/alerts",
+      "chosenIconUrl": "https://uburinzi.vercel.app/static/icons/icon-192.png"
+    },
+    {
+      "name": "Patients",
+      "short_name": "Patients",
+      "url": "/patients",
+      "chosenIconUrl": "https://uburinzi.vercel.app/static/icons/icon-192.png"
+    },
+    {
+      "name": "Channels",
+      "short_name": "Channels",
+      "url": "/channels",
+      "chosenIconUrl": "https://uburinzi.vercel.app/static/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://uburinzi.vercel.app/static/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://uburinzi.vercel.app/",
+  "minSdkVersion": 21,
+  "orientationLock": false
+}

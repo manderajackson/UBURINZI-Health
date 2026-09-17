@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}New patient · Uburinzi Health{% endblock %}
+{% block heading %}Enrol a patient{% endblock %}
+{% block subheading %}Consent must be captured before any SMS is sent{% endblock %}
+
+{% block content %}
+<div class="grid two">
+  <div class="card">
+    <form method="post" action="/patients/new">
+      <div class="form-grid">
+        <div class="field"><label>First name</label><input name="first_name" required placeholder="Marie"></div>
+        <div class="field"><label>Last name</label><input name="last_name" placeholder="Uwimana"></div>
+        <div class="field"><label>Phone (with country code)</label><input name="phone" required placeholder="+250788123456"></div>
+        <div class="field"><label>File number</label><input name="mrn" placeholder="UB-2026-0053"></div>
+        <div class="field">
+          <label>Language for SMS</label>
+          <select name="language">
+            {% for code, name in languages.items() %}
+            <option value="{{ code }}" {{ 'selected' if code == 'rw' }}>{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Year of birth</label><input name="birth_year" type="number" placeholder="1975"></div>
+        <div class="field">
+          <label>Sex</label>
+          <select name="sex"><option>female</option><option>male</option><option>unknown</option></select>
+        </div>
+        <div class="field"><label>Village / sector</label><input name="village" placeholder="Gatenga"></div>
+        <div class="field">
+          <label>Programme</label>
+          <select name="program">
+            {% for key, spec in programs.items() %}
+            <option value="{{ key }}">{{ spec.label }} (check-in every {{ spec.cadence_days }} days)</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field"><label>Medication</label><input name="medication" placeholder="Metformin 500mg"></div>
+      </div>
+
+      <label style="display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--ink);font-weight:400;margin-bottom:14px">
+        <input type="checkbox" name="consent_sms" value="1" checked style="width:auto;margin-top:3px">
+        <span>
+          <b>Patient consented</b> to receive free SMS reminders about medication and appointments,
+          and can reply STOP at any time. Recorded in the audit log.
+        </span>
+      </label>
+
+      <div class="btn-row">
+        <button class="btn primary" type="submit">Enrol &amp; send welcome SMS</button>
+        <a class="btn" href="/patients">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>What happens next</h3>
+    <ol style="font-size:13.5px;color:var(--muted);padding-left:18px;margin:0">
+      <li style="margin-bottom:8px">Patient record + programme enrolment are created.</li>
+      <li style="margin-bottom:8px">A welcome SMS goes out immediately in their language.</li>
+      <li style="margin-bottom:8px">The scheduler queues the first medication check-in on the programme cadence.</li>
+      <li style="margin-bottom:8px">Replies (1 = took it, 2 = missed, 3 = unwell) update the risk score instantly.</li>
+      <li>Missed doses and silence raise an alert on the nurse's dashboard.</li>
+    </ol>
+    <div class="banner info" style="margin-top:16px">
+      <b>Real-world note:</b> for the pilot, capture consent on the clinic's paper form or in the EMR and tick the
+      box only after the patient has agreed.
+    </div>
+  </div>
+</div>
+{% endblock %}
